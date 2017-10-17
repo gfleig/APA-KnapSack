@@ -44,56 +44,82 @@ std::vector <item> buildItemList(const char* filename, int& sackSize, int& numbe
 
 void knapSack(const int sackSize, const int numberOfItems, const std::vector <item> itemList)
 {
-    struct tableItem table[sackSize + 1][numberOfItems + 1];
+    struct tableItem** table = new struct tableItem*[sackSize + 1];
 
-    for(int i = 0; i < numberOfItems + 1; ++i)      //inicializa primeira linha com 0
+    for(int i = 0; i < sackSize + 1; ++i)
+    {
+	    table[i] = new struct tableItem[numberOfItems + 1];
+    }
+	
+    for(int i = 0; i <= numberOfItems; ++i)      //inicializa primeira linha com 0
     {
         table[0][i].value = 0;
         table[0][i].X = 0;
     }
-    for(int i = 0; i < sackSize + 1; ++i)           //inicializa ultima coluna com 0
+    for(int m = 0; m <= sackSize; ++m)           //inicializa ultima coluna com 0
     {
-        table[i][numberOfItems].value = 0;
-        table[i][numberOfItems].X = 0;
-    }
+        table[m][numberOfItems].value = 0;
+        table[m][numberOfItems].X = 0;
+    }   
 
     for(int i = numberOfItems - 1; i >= 0; --i)
     {
         for(int M = 1; M <= sackSize; ++M)
         {   
-            int Coord = M - itemList[i+1].P;
-            
-            int tableValue;
-            if(Coord < 0) 
-            {                
-                tableValue = itemList[i+1].C;
-            }      
-            else
-            {
-                tableValue = table[Coord][i + 1].value + itemList[i+1].C;
-            }     
-
-            //finds max(table[M][i+1].value , table[M - itemList[i].P][i + 1].value + itemList[i].C)
-            if(table[M][i+1].value > tableValue)
-            {
-                table[M][i].value = table[M][i+1].value;
-                table[M][i].X = 0;
-            }
-            else
-            {
-                table[M][i].value = tableValue;
-                table[M][i].X = 1;
-            }
+            if(itemList[i].P <= M)          //prevents access of elements "outside" table    
+			{
+		        //finds max(table[M][i+1].value , table[M - itemList[i].P][i + 1].value + itemList[i].C)
+		        if(table[M][i+1].value > table[M-itemList[i].P][i+1].value + itemList[i].C)
+		        {
+		            table[M][i].value = table[M][i+1].value;
+		            table[M][i].X = 0;
+		        }
+		        else
+		        {
+		            table[M][i].value = table[M-itemList[i].P][i+1].value + itemList[i].C;
+		            table[M][i].X = 1;
+		        }
+		    }
+		    else
+		    {
+		    	table[M][i].value = table[M][i+1].value;
+		        table[M][i].X = 0;
+		    }
         }        
     }
 
-    std::cout << table[sackSize][0].value << std::endl;
+    std::cout << "valor : " << table[sackSize][0].value << std::endl;    
+
+    std::cout << "produtos escolhidos : "; 
+
+    int totalValue = table[sackSize][0].value;
+    int column = 0;
+    int line = sackSize;
+    while(totalValue)
+    {
+        if(!table[line][column].X)
+        {
+            ++column;
+        }
+        else
+        {
+            std::cout << column + 1;
+            line -= itemList[column].P;
+            totalValue -= itemList[column].C;
+            ++column;
+            if(totalValue)
+            {
+                std::cout << ", ";
+            }
+        }        
+    } 
+    std::cout << std::endl;
 }
 
 int main()
 {
     int sackSize, numberOfItems;
-    std::vector <item> itemList = buildItemList("instancias/mochila01.txt", sackSize, numberOfItems);
+    std::vector <item> itemList = buildItemList("instancias/mochila5000.txt", sackSize, numberOfItems);
     
     knapSack(sackSize, numberOfItems, itemList);
 
